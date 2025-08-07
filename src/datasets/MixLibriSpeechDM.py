@@ -26,6 +26,11 @@ warnings.filterwarnings(
     "ignore", message="Scale factor for peak normalization is extreme")
 
 
+def identity_function(a):
+    """Identity function to replace lambda a: a for pickling compatibility"""
+    return a
+
+
 class MixLibriSpeechCIPICDatasetDM(Dataset):
     """
     LibriSpeech dataset with dynamic mixing. Only to be used for training set.
@@ -74,7 +79,7 @@ class MixLibriSpeechCIPICDatasetDM(Dataset):
             self.resampler = AT.Resample(sr, resample_rate)
             self.sr = resample_rate
         else:
-            self.resampler = lambda a: a
+            self.resampler = identity_function
             self.sr = sr
         self.enroll_len = enroll_len * self.sr
 
@@ -117,7 +122,7 @@ class MixLibriSpeechCIPICDatasetDM(Dataset):
 
         # Get embeddings
         embed_path = os.path.join(self.embed_dir, tgt_id + '.pt')
-        embeds = torch.load(embed_path, map_location='cpu').items()
+        embeds = torch.load(embed_path, map_location='cpu', weights_only=False).items()
         if self.dset == 'train':
             embeds = random.sample(embeds, self.num_enroll)
         else:

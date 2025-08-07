@@ -26,6 +26,14 @@ warnings.filterwarnings(
 warnings.filterwarnings(
     "ignore", message="Scale factor for peak normalization is extreme")
 
+def identity_function(a):
+    """Identity function to replace lambda a: a for pickling compatibility"""
+    return a
+
+def strip_object_columns(x):
+    """Strip whitespace from object columns for pickling compatibility"""
+    return x.str.strip() if x.dtype == "object" else x
+
 class MixLibriSpeechCIPICMotionDataset(Dataset):
     def __init__(self, fg_dir, bg_dir, embed_dir, jams_dir, hrtf_list, dset,
                  sr=None, resample_rate=None, num_enroll=10, enroll_len=5) -> None:
@@ -57,7 +65,7 @@ class MixLibriSpeechCIPICMotionDataset(Dataset):
             self.resampler = AT.Resample(sr, resample_rate)
             self.sr = resample_rate
         else:
-            self.resampler = lambda a: a
+            self.resampler = identity_function
             self.sr = sr
         self.enroll_len = enroll_len * self.sr
 
@@ -78,7 +86,7 @@ class MixLibriSpeechCIPICMotionDataset(Dataset):
 
         # Remove extra whitespaces throughout the dataframe
         df = df.iloc[1:]
-        df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
+        df = df.apply(strip_object_columns)
 
         speaker_info = {}
         for i, row in df.iterrows():
@@ -131,7 +139,7 @@ class MixLibriSpeechCIPICMotionDataset(Dataset):
 
         # Get embeddings
         embed_path = os.path.join(self.embed_dir, tgt_id + '.pt')
-        embeds = torch.load(embed_path, map_location='cpu').items()
+        embeds = torch.load(embed_path, map_location='cpu', weights_only=False).items()
         if self.dset == 'train':
             embeds = random.sample(embeds, self.num_enroll)
         else:

@@ -30,6 +30,18 @@ warnings.filterwarnings(
 warnings.filterwarnings(
     "ignore", message="Scale factor for peak normalization is extreme")
 
+def identity_function(a):
+    """Identity function to replace lambda a: a for pickling compatibility"""
+    return a
+
+def create_cipic_motion_simulator(sofa, sr, use_piecewise_arcs=False):
+    """Create CIPIC motion simulator for pickling compatibility"""
+    return CIPICMotionSimulator2(sofa, sr, use_piecewise_arcs=use_piecewise_arcs)
+
+def strip_object_columns(x):
+    """Strip whitespace from object columns for pickling compatibility"""
+    return x.str.strip() if x.dtype == "object" else x
+
 class MixLibriSpeechNoisyEnroll(Dataset):
     def __init__(self, fg_dir, bg_dir, embed_dir, jams_dir, hrtf_list, dset,
                  sr=None, resample_rate=None, num_enroll=10, enroll_len=5, hrtf_type="CIPIC",
@@ -69,7 +81,7 @@ class MixLibriSpeechNoisyEnroll(Dataset):
             self.resampler = AT.Resample(sr, resample_rate)
             self.sr = resample_rate
         else:
-            self.resampler = lambda a: a
+            self.resampler = identity_function
             self.sr = sr
         self.enroll_len = enroll_len * self.sr
 
@@ -90,9 +102,7 @@ class MixLibriSpeechNoisyEnroll(Dataset):
             self.multi_ch_simulator = RRBRIRSimulator(self.hrtf_list, sr)
         elif hrtf_type == 'MultiCh':
             if use_motion:
-                cipic_simulator_type = \
-                    lambda sofa, sr: CIPICMotionSimulator2(
-                        sofa, sr, use_piecewise_arcs=motion_use_piecewise_arcs)
+                cipic_simulator_type = create_cipic_motion_simulator
             else:
                 cipic_simulator_type = CIPICSimulator 
             self.multi_ch_simulator = MultiChSimulator(self.hrtf_list, sr, cipic_simulator_type, dset=dset)
@@ -134,7 +144,7 @@ class MixLibriSpeechNoisyEnroll(Dataset):
 
         # Remove extra whitespaces throughout the dataframe
         df = df.iloc[1:]
-        df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
+        df = df.apply(strip_object_columns)
 
         speaker_info = {}
         for i, row in df.iterrows():
@@ -145,7 +155,7 @@ class MixLibriSpeechNoisyEnroll(Dataset):
     def _get_dvector_embedding(self, filename):
         spk_id = filename.split('-')[0]
         embed_map = torch.load(
-            os.path.join(self.embed_dir, f'{spk_id}.pt'), map_location='cpu')
+            os.path.join(self.embed_dir, f'{spk_id}.pt'), map_location='cpu', weights_only=False)
         return torch.from_numpy(embed_map[filename]).view(-1)
 
     def __getitem__(self, idx):

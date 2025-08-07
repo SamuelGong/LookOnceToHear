@@ -25,6 +25,10 @@ warnings.filterwarnings(
 warnings.filterwarnings(
     "ignore", message="Scale factor for peak normalization is extreme")
 
+def identity_function(a):
+    """Identity function to replace lambda a: a for pickling compatibility"""
+    return a
+
 class OracleDataset(Dataset):
     def __init__(self, fg_dir, bg_dir, embed_dir, jams_dir, hrtf_list, dset, sr=None,
                  resample_rate=None, num_enroll=10, enroll_len=5) -> None:
@@ -55,7 +59,7 @@ class OracleDataset(Dataset):
             self.resampler = AT.Resample(sr, resample_rate)
             self.sr = resample_rate
         else:
-            self.resampler = lambda a: a
+            self.resampler = identity_function
             self.sr = sr
         self.enroll_len = enroll_len * self.sr
 

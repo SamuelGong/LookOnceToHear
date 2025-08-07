@@ -27,6 +27,14 @@ def _show_rir(rir, sr):
     plt.plot(rir[1], label='Right')
     plt.show()
 
+def combine_room_config(x):
+    """Combine room and config for pickling compatibility"""
+    return x['room'] + '_' + x['config']
+
+def count_paths(x):
+    """Count paths for pickling compatibility"""
+    return len(x)
+
 class SOFASimulator():
     def __init__(self, sofa_text_file, fs) -> None:
         sofa_dir = os.path.dirname(sofa_text_file)
@@ -129,7 +137,7 @@ class ASHSimulator():
             room, config, elevation, azimuth = re.match(
                 r'.*?/BRIR_R(.*?)_C(.*?)_E(.*?)_A(.*?)\.wav', brir).groups()
             brir_df.loc[len(brir_df)] = [room, config, elevation, azimuth, brir]
-        brir_df['config'] = brir_df.apply(lambda x: x['room'] + '_' + x['config'], axis=1)
+        brir_df['config'] = brir_df.apply(combine_room_config, axis=1)
 
         train_rooms = ['05A', '05B', '06', '07', '09', '12',
                        '13', '17', '18', '19', '20', '21', '22', '23', '24', '25',
@@ -158,8 +166,8 @@ class ASHSimulator():
         self.brir_df_non0 = brir_df_non0.groupby('config').agg(list).reset_index()
 
         # Add count column
-        self.brir_df_0['count'] = brir_df_0['path'].apply(lambda x: len(x))
-        self.brir_df_non0['count'] = brir_df_non0['path'].apply(lambda x: len(x))
+        self.brir_df_0['count'] = brir_df_0['path'].apply(count_paths)
+        self.brir_df_non0['count'] = brir_df_non0['path'].apply(count_paths)
 
         self.debug = False
 

@@ -118,7 +118,7 @@ def run(args, device):
     else:
         raise ValueError(f'Invalid dataset: {args.dset}')
     dl_iter = iter(torch.utils.data.DataLoader(
-        ds, batch_size=4, shuffle=False, num_workers=16))
+        ds, batch_size=4, shuffle=False, num_workers=8))
 
     results = []
     for i, (inputs, targets) in enumerate(tqdm(dl_iter)):
