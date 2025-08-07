@@ -8,9 +8,30 @@ https://github.com/vb000/LookOnceToHear/assets/16723254/49483e4d-9ebe-4c56-a84e-
 
 ## Setup
 
-    conda create -n ts-hear python=3.9
-    conda activate ts-hear
-    pip install -r requirements.txt
+```bash
+conda create -n ts-hear python=3.9 -y
+conda activate ts-hear
+
+# if not do this first, pesq cannot be installed
+pip install numpy
+pip install cython
+pip install -r requirements.txt
+```
+
+**Zhifeng**:
+1. For macOS, if having error like `'sox.h' file not found`:
+    ```bash
+    brew install sox
+   
+   # Tell the compiler and linker where SoX is
+    export CPPFLAGS="-I/opt/homebrew/opt/sox/include"
+    export CFLAGS="$CPPFLAGS"
+    export LDFLAGS="-L/opt/homebrew/opt/sox/lib -Wl,-rpath,/opt/homebrew/opt/sox/lib"
+    export PKG_CONFIG_PATH="/opt/homebrew/opt/sox/lib/pkgconfig:$PKG_CONFIG_PATH"
+    
+    # Optional: clear wheel cache to force a rebuild
+    pip install --no-cache-dir --force-reinstall soxbindings  # or rerun your original pip install command
+    ```
 
 ## Training
 
