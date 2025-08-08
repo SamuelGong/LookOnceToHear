@@ -21,4 +21,6 @@ cdpam
 auraloss
 seaborn
 ptflops
-
+requests
+openai-whisper
+dotenv
