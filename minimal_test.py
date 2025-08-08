@@ -220,20 +220,29 @@ def minimal_test():
         else:
             print("\nNo record found on retrieval; storage may have failed.")
             
-        # # Test with a third audio file from the same speaker to show consistency
-        # print("\nTesting with a third audio file from the same speaker...")
-        # test_embedding_path = f"data/MixLibriSpeech/librispeech_scaper_fmt/test-clean/{speaker_id}/{speaker_id}-134686-0002.flac"
-        # if os.path.exists(test_embedding_path):
-        #     test_embedding = get_speaker_embedding(test_embedding_path, encoder, sr)
-        #     test_retrieved = pp.get_by_embedding(test_embedding)
-        #     if test_retrieved is not None:
-        #         print("✓ Successfully retrieved record using embedding from third audio file!")
-        #         print("This demonstrates the speaker embedding is consistent across different utterances.")
-        #     else:
-        #         print("✗ Could not retrieve record using third audio file embedding.")
-        #         print("This might indicate the embedding fingerprint is too sensitive to utterance differences.")
-        # else:
-        #     print(f"Test file not found: {test_embedding_path}")
+        # Test approximate retrieval with a different audio file from the same speaker
+        print("\nTesting approximate retrieval with different utterance...")
+        test_embedding_path = f"data/MixLibriSpeech/librispeech_scaper_fmt/test-clean/{speaker_id}/{speaker_id}-134686-0010.flac"
+        if os.path.exists(test_embedding_path):
+            # Save the test audio file for reference
+            test_audio, _ = sf.read(test_embedding_path)
+            sf.write(f"{output_dir}/retrieval_test_audio.wav", test_audio, sr)
+            print(f"Saved retrieval test audio: {output_dir}/retrieval_test_audio.wav")
+            
+            test_embedding = get_speaker_embedding(test_embedding_path, encoder, sr)
+            test_retrieved = pp.get_by_embedding(test_embedding, similarity_threshold=0.50)
+            if test_retrieved is not None:
+                similarity = test_retrieved.get('similarity', 'unknown')
+                print(f"✓ Successfully retrieved record using different utterance!")
+                print(f"Similarity score: {similarity:.4f}")
+                print("This demonstrates approximate retrieval works across different utterances.")
+                print("Retrieved transcript:", test_retrieved.get('transcript', '')[:100] + "...")
+            else:
+                print("✗ Could not retrieve record using different utterance embedding.")
+                print("This might indicate the similarity threshold is too high or embeddings are too different.")
+        else:
+            print(f"Test file not found: {test_embedding_path}")
+
     except Exception as e:
         print("Postprocessing failed:", str(e))
         print("Ensure OPENAI_API_KEY is set for summarization (optional) and openai-whisper is installed.")

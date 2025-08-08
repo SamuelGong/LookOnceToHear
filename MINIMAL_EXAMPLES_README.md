@@ -51,17 +51,13 @@ python minimal_test.py
     ```
     (ts-hear) samuel@Paprikas-MacBook-Pro-2 LookOnceToHear % python minimal_test.py
     Using device: cpu
-    /Users/samuel/anaconda3/envs/ts-hear/lib/python3.9/site-packages/espnet2/enh/decoder/stft_decoder.py:58: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
-      @torch.cuda.amp.autocast(enabled=False)
-    /Users/samuel/anaconda3/envs/ts-hear/lib/python3.9/site-packages/espnet2/enh/encoder/stft_encoder.py:79: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
-      @torch.cuda.amp.autocast(enabled=False)
     Loading runs/tsh/best.ckpt
     Loaded the voice encoder model on cpu in 0.01 seconds.
     Loading audio files...
     Using speaker 1089 with:
-      - Mixture audio: data/MixLibriSpeech/librispeech_scaper_fmt/test-clean/1089/1089-134686-0000.flac
-        - Embedding audio: data/MixLibriSpeech/librispeech_scaper_fmt/test-clean/1089/1089-134686-0005.flac
-        - Noise audio: data/MixLibriSpeech/librispeech_scaper_fmt/test-clean/121/121-121726-0000.flac
+    - Mixture audio: data/MixLibriSpeech/librispeech_scaper_fmt/test-clean/1089/1089-134686-0000.flac
+      - Embedding audio: data/MixLibriSpeech/librispeech_scaper_fmt/test-clean/1089/1089-134686-0005.flac
+      - Noise audio: data/MixLibriSpeech/librispeech_scaper_fmt/test-clean/121/121-121726-0000.flac
     Extracting speaker embedding from different utterance...
     Mixture shape: torch.Size([1, 2, 135360])
     Embedding shape: torch.Size([1, 1, 256])
@@ -85,16 +81,21 @@ python minimal_test.py
     Loading Whisper model: base
     Whisper model loaded on device: cpu
     Transcribing: minimal_test_results/separated_output.wav
-    /Users/samuel/anaconda3/envs/ts-hear/lib/python3.9/site-packages/whisper/transcribe.py:132: UserWarning: FP16 is not supported on CPU; using FP32 instead
-      warnings.warn("FP16 is not supported on CPU; using FP32 instead")
     Transcript:  He hoped there would be stew for dinner, turnips and carrots and bruise potatoes and fat mutton pieces to be ladled out. Thick pepper.
     Stored KV record with key (embedding fingerprint): 144c30931caede34c4b1188404e62e8534575261b92542afe459d3c54afa351a
     Transcript (truncated): He hoped there would be stew for dinner, turnips and carrots and bruise potatoes and fat mutton pieces to be ladled out. Thick pepper.
     Summary:
-     He anticipates a hearty dinner of stew. The stew is expected to contain turnips, carrots, slightly bruised potatoes, and chunks of fatty mutton. He also looks forward to the stew having a thick, peppery flavor, imagining the ladling - out of this comforting dish.
+     He anticipates having stew for dinner. The stew is expected to contain turnips, carrots, slightly bruised potatoes, and fat mutton pieces, all ladled out. He also hopes for it to be generously seasoned with thick pepper, showing his eagerness for a hearty and flavorful meal.
     
     Retrieved record by embedding fingerprint.
     Retrieved metadata: {'embedding_audio': 'data/MixLibriSpeech/librispeech_scaper_fmt/test-clean/1089/1089-134686-0005.flac', 'mixture_audio': 'data/MixLibriSpeech/librispeech_scaper_fmt/test-clean/1089/1089-134686-0000.flac', 'model_run_dir': 'runs/tsh', 'noise_audio': 'data/MixLibriSpeech/librispeech_scaper_fmt/test-clean/121/121-121726-0000.flac', 'sample_rate': 16000, 'source': 'minimal_test', 'speaker_id': '1089', 'test_type': 'different_utterances_same_speaker'}
+    
+    Testing approximate retrieval with different utterance...
+    Saved retrieval test audio: minimal_test_results/retrieval_test_audio.wav
+    ✓ Successfully retrieved record using different utterance!
+    Similarity score: 0.8230
+    This demonstrates approximate retrieval works across different utterances.
+    Retrieved transcript: He hoped there would be stew for dinner, turnips and carrots and bruise potatoes and fat mutton piec...
     ```
 
 ## Understanding the Process

@@ -67,6 +67,75 @@ class PostProcessor:
 
     # --------------- Public API ---------------
 
+    def get_by_embedding(self, speaker_embedding: Union[torch.Tensor, np.ndarray, list], 
+                         similarity_threshold: float = 0.95) -> Optional[Dict[str, Any]]:
+        """Retrieve record by speaker embedding using approximate matching.
+        
+        Args:
+            speaker_embedding: The speaker embedding to search for
+            similarity_threshold: Minimum cosine similarity for a match (default: 0.95)
+        
+        Returns:
+            The most similar record if similarity >= threshold, otherwise None
+        """
+        fingerprint = self.compute_embedding_fingerprint(speaker_embedding)
+        
+        # First try exact match
+        exact_match = self.kv_get(fingerprint)
+        if exact_match is not None:
+            return exact_match
+        
+        # If no exact match, try approximate matching
+        return self._get_by_similarity(speaker_embedding, similarity_threshold)
+
+    def _get_by_similarity(self, query_embedding: Union[torch.Tensor, np.ndarray, list], 
+                          threshold: float = 0.95) -> Optional[Dict[str, Any]]:
+        """Find the most similar embedding in the database using cosine similarity."""
+        # Normalize query embedding
+        if isinstance(query_embedding, torch.Tensor):
+            query_emb = query_embedding.detach().cpu().float().numpy()
+        elif isinstance(query_embedding, np.ndarray):
+            query_emb = query_embedding.astype(np.float32)
+        else:
+            query_emb = np.asarray(query_embedding, dtype=np.float32)
+        
+        query_emb = query_emb.reshape(-1).astype(np.float32)
+        query_norm = np.linalg.norm(query_emb) + 1e-12
+        query_emb = query_emb / query_norm
+        
+        best_similarity = -1.0
+        best_record = None
+        
+        # Search through all stored records
+        with sqlite3.connect(self.db_path) as conn:
+            cur = conn.execute("SELECT key, value FROM kv_store")
+            for row in cur.fetchall():
+                key, value_json = row
+                try:
+                    record = json.loads(value_json)
+                    # Reconstruct the original embedding from the fingerprint
+                    # Note: This is a limitation - we can't reconstruct the exact embedding
+                    # from the fingerprint, so we'll need to store embeddings separately
+                    if 'embedding' in record:
+                        stored_emb = np.array(record['embedding'], dtype=np.float32)
+                        stored_emb = stored_emb.reshape(-1)
+                        stored_norm = np.linalg.norm(stored_emb) + 1e-12
+                        stored_emb = stored_emb / stored_norm
+                        
+                        # Compute cosine similarity
+                        similarity = np.dot(query_emb, stored_emb)
+                        
+                        if similarity > best_similarity:
+                            best_similarity = similarity
+                            best_record = record
+                            best_record['similarity'] = similarity
+                except (json.JSONDecodeError, KeyError, ValueError):
+                    continue
+        
+        if best_similarity >= threshold:
+            return best_record
+        return None
+
     def process_and_store(
         self,
         audio_path: str,
@@ -92,20 +161,25 @@ class PostProcessor:
         else:
             summary_text = "No API key provided for summarization"
 
+        # Store the original embedding for approximate matching
+        if isinstance(speaker_embedding, torch.Tensor):
+            embedding_array = speaker_embedding.detach().cpu().float().numpy()
+        elif isinstance(speaker_embedding, np.ndarray):
+            embedding_array = speaker_embedding.astype(np.float32)
+        else:
+            embedding_array = np.asarray(speaker_embedding, dtype=np.float32)
+
         value: Dict[str, Any] = {
             "transcript": transcript_text,
             "summary": summary_text,
             "metadata": metadata or {},
             "audio_path": audio_path,
             "created_at": int(time.time()),
+            "embedding": embedding_array.tolist(),  # Store original embedding for similarity matching
         }
 
         self.kv_put(fingerprint, value)
         return {"key": fingerprint, **value}
-
-    def get_by_embedding(self, speaker_embedding: Union[torch.Tensor, np.ndarray, list]) -> Optional[Dict[str, Any]]:
-        fingerprint = self.compute_embedding_fingerprint(speaker_embedding)
-        return self.kv_get(fingerprint)
 
     # --------------- Fingerprint ---------------
 
