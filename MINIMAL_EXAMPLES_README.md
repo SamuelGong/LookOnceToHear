@@ -49,7 +49,7 @@ python minimal_test.py
   - `separated_output.wav` - Model output (separated speech)
 - Example standard output:
     ```
-    (ts-hear) samuel@Paprikas-MacBook-Pro-2 LookOnceToHear % python minimal_test_fixed.py
+    (ts-hear) samuel@Paprikas-MacBook-Pro-2 LookOnceToHear % python minimal_test.py
     Using device: cpu
     /Users/samuel/anaconda3/envs/ts-hear/lib/python3.9/site-packages/espnet2/enh/decoder/stft_decoder.py:58: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
       @torch.cuda.amp.autocast(enabled=False)
@@ -58,7 +58,11 @@ python minimal_test.py
     Loading runs/tsh/best.ckpt
     Loaded the voice encoder model on cpu in 0.01 seconds.
     Loading audio files...
-    Extracting speaker embedding...
+    Using speaker 1089 with:
+      - Mixture audio: data/MixLibriSpeech/librispeech_scaper_fmt/test-clean/1089/1089-134686-0000.flac
+        - Embedding audio: data/MixLibriSpeech/librispeech_scaper_fmt/test-clean/1089/1089-134686-0005.flac
+        - Noise audio: data/MixLibriSpeech/librispeech_scaper_fmt/test-clean/121/121-121726-0000.flac
+    Extracting speaker embedding from different utterance...
     Mixture shape: torch.Size([1, 2, 135360])
     Embedding shape: torch.Size([1, 1, 256])
     Target shape: torch.Size([1, 135360, 2])
@@ -67,13 +71,14 @@ python minimal_test.py
     
     Results:
     Input SI-SNR: 0.00 dB
-    Output SI-SNR: -8.22 dB
-    SI-SNR Improvement: -8.22 dB
+    Output SI-SNR: -7.90 dB
+    SI-SNR Improvement: -7.90 dB
     
     Audio files saved to minimal_test_results/
     - mixture.wav: Original noisy mixture
       - target_clean.wav: Clean target speech
       - separated_output.wav: Model output (separated speech)
+      - embedding_audio.wav: Audio used for speaker embedding extraction
     
     Running postprocessing (ASR + summarization + KV store)...
     4ae52c22-e0c8-4897-9f74-3a0866ed6258
@@ -82,13 +87,14 @@ python minimal_test.py
     Transcribing: minimal_test_results/separated_output.wav
     /Users/samuel/anaconda3/envs/ts-hear/lib/python3.9/site-packages/whisper/transcribe.py:132: UserWarning: FP16 is not supported on CPU; using FP32 instead
       warnings.warn("FP16 is not supported on CPU; using FP32 instead")
-    Transcript:  But hope there would be stew for dinner, turnips and carrots and bruised potatoes and fat mutton pieces to be ladled out in thick pepper-
-    Stored KV record with key (embedding fingerprint): b1233fcfa2159050fd1cd92efd1084bd9d5a47c578cdb0d5c699ff3bd6f1ad9d
-    Transcript (truncated): But hope there would be stew for dinner, turnips and carrots and bruised potatoes and fat mutton pieces to be ladled out in thick pepper-
+    Transcript:  He hoped there would be stew for dinner, turnips and carrots and bruise potatoes and fat mutton pieces to be ladled out. Thick pepper.
+    Stored KV record with key (embedding fingerprint): 144c30931caede34c4b1188404e62e8534575261b92542afe459d3c54afa351a
+    Transcript (truncated): He hoped there would be stew for dinner, turnips and carrots and bruise potatoes and fat mutton pieces to be ladled out. Thick pepper.
     Summary:
-     The speaker hopes that dinner will be stew. The stew is envisioned to contain turnips, carrots, bruised potatoes, and fat mutton pieces, all ladled out with a thick pepper - based sauce. It reflects a simple yet anticipated meal, likely offering comfort and sustenance.
+     He anticipates a hearty dinner of stew. The stew is expected to contain turnips, carrots, slightly bruised potatoes, and chunks of fatty mutton. He also looks forward to the stew having a thick, peppery flavor, imagining the ladling - out of this comforting dish.
     
     Retrieved record by embedding fingerprint.
+    Retrieved metadata: {'embedding_audio': 'data/MixLibriSpeech/librispeech_scaper_fmt/test-clean/1089/1089-134686-0005.flac', 'mixture_audio': 'data/MixLibriSpeech/librispeech_scaper_fmt/test-clean/1089/1089-134686-0000.flac', 'model_run_dir': 'runs/tsh', 'noise_audio': 'data/MixLibriSpeech/librispeech_scaper_fmt/test-clean/121/121-121726-0000.flac', 'sample_rate': 16000, 'source': 'minimal_test', 'speaker_id': '1089', 'test_type': 'different_utterances_same_speaker'}
     ```
 
 ## Understanding the Process
